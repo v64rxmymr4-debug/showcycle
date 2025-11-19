@@ -1,186 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ShowCycle</title>
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="apple-touch-icon" href="https://img.icons8.com/ios-filled/512/tv-show.png" />
+  
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
-  <style>
-    body { margin: 0; background: #0f172a; font-family: system-ui; -webkit-tap-highlight-color: transparent; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-  </style>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // This makes the icons available to your React components as 'lucide'
+    const lucide = window.lucide;
+  </script>
 </head>
 <body>
+  
   <div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useRef } = React;
+  
+  <script type="text/babel">
+    // PASTE ALL YOUR 800+ LINES OF CODE HERE (Types, API, Components, App)
 
-// Types
-interface Show { id: number; title: string; image: string | null; season: number; episode: number; status: 'rotation' | 'watchlist' | 'archive'; tvmazeId?: number; }
-
-// API
-const searchShows = async (query) => {
-  if (!query.trim()) return [];
-  try {
-    const r = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`);
-    const d = await r.json();
-    return d.map(i => ({
-      id: i.show.id,
-      title: i.show.name,
-      image: i.show.image?.medium || i.show.image?.original || null,
-      tvmazeId: i.show.id
-    }));
-  } catch { return []; }
-};
-
-const getEpisodes = async (tvmazeId) => {
-  try {
-    const r = await fetch(`https://api.tvmaze.com/shows/${tvmazeId}/episodes`);
-    return r.ok ? await r.json() : [];
-  } catch { return []; }
-};
-
-// Components (HeroCard, RotationItem, SearchModal, CatchUpModal — all your beautiful code)
-const HeroCard = ({ show, onWatched, onEdit, onFinish }) => (
-  <div className="relative overflow-hidden rounded-2xl shadow-2xl bg-black/40 backdrop-blur-md text-white mb-6 transform transition-all duration-300 hover:scale-[1.01] border border-white/10 group">
-    <div className="relative p-6 flex flex-col items-center text-center z-10">
-      <div className="flex justify-between w-full items-start absolute top-4 px-4">
-        <span className="text-blue-300 font-bold tracking-wider text-xs uppercase shadow-black drop-shadow-md bg-black/30 px-2 py-1 rounded-md">
-          Up Next
-        </span>
-        <button onClick={() => onEdit(show)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md">
-          <lucide.Settings2 size={18} />
-        </button>
-      </div>
-      
-      <div className="mt-6 w-48 h-72 rounded-xl shadow-2xl overflow-hidden bg-slate-800 mb-5 border-4 border-white/10 relative">
-        {show.image ? (
-          <img src={show.image} alt={show.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-slate-900 p-4">
-            <lucide.Tv size={48} className="mb-2" />
-            <span className="text-xs text-center opacity-50">No Image</span>
-          </div>
-        )}
-      </div>
-
-      <h2 className="text-3xl font-bold leading-tight mb-2 drop-shadow-lg">{show.title}</h2>
-      <p className="text-white/90 font-bold text-xl mb-8 drop-shadow-md bg-blue-600/20 px-4 py-1 rounded-full border border-blue-500/30">
-        S{show.season} : E{show.episode}
-      </p>
-
-      <div className="flex gap-3 w-full max-w-xs">
-        <button onClick={() => onFinish(show)} className="flex-1 bg-slate-800/60 hover:bg-slate-700/80 backdrop-blur-md text-white py-4 px-4 rounded-2xl font-semibold text-xs transition-all border border-white/5">
-          Finish Show
-        </button>
-        <button onClick={() => onWatched(show)} className="flex-[2] bg-blue-600 hover:bg-blue-500 text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-xl shadow-blue-900/30 flex items-center justify-center gap-2 active:scale-95 transition-all border border-blue-400/20">
-          <lucide.Play size={20} fill="currentColor" />
-          Watch
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-// (Part 2 in next message — paste it right after this one, no gap)const RotationItem = ({ show, onEdit }) => (
-  <div className="flex items-center gap-4 p-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl shadow-sm mb-3 hover:bg-black/50 transition-colors group relative pr-12">
-    <div className="flex-shrink-0 w-14 h-20 bg-slate-800 rounded-lg overflow-hidden shadow-md relative">
-      {show.image ? (
-        <img src={show.image} alt={show.title} className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-slate-600"><lucide.Tv size={16} /></div>
-      )}
-    </div>
-    <div className="flex-1 min-w-0">
-      <h4 className="font-bold text-white text-lg truncate">{show.title}</h4>
-      <p className="text-sm text-blue-200/80 font-medium">Season {show.season}, Ep {show.episode}</p>
-    </div>
-    <button onClick={() => onEdit(show)} className="absolute right-4 p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-      <lucide.Edit3 size={18} />
-    </button>
-  </div>
-);
-
-// SearchModal, CatchUpModal, and the full App component with all your shows, undo toast, bottom nav — everything is here
-
-const App = () => {
-  const [activeTab, setActiveTab] = useState('rotation');
-  const [isSearchOpen, setSearchOpen] = useState(false);
-  const [editingShow, setEditingShow] = useState(null);
-  const [history, setHistory] = useState(null);
-  const [showUndo, setShowUndo] = useState(false);
-  const undoTimeoutRef = useRef(null);
-
-  const [shows, setShows] = useState(() => {
-    try {
-      const saved = localStorage.getItem('showCycleData_v8');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [/* all your original shows exactly as you had them */];
-  });
-
-  useEffect(() => localStorage.setItem('showCycleData_v8', JSON.stringify(shows)), [shows]);
-
-  const rotation = shows.filter(s => s.status === 'rotation');
-  const watchlist = shows.filter(s => s.status === 'watchlist');
-  const archive = shows.filter(s => s.status === 'archive');
-
-  const handleWatched = (show) => {
-    setHistory([...shows]);
-    setShowUndo(true);
-    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-    undoTimeoutRef.current = setTimeout(() => { setShowUndo(false); setHistory(null); }, 5000);
-    setShows(prev => prev.map(s => s.id === show.id ? { ...s, episode: s.episode + 1 } : s));
-  };
-
-  const handleUndo = () => {
-    if (history) {
-      setShows(history);
-      setHistory(null);
-      setShowUndo(false);
-      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-    }
-  };
-
-  const handleAddShow = (apiShow) => {
-    if (shows.some(s => s.tvmazeId === apiShow.id)) return alert('Already in your list!');
-    const newShow = {
-      id: Date.now(),
-      tvmazeId: apiShow.id,
-      title: apiShow.title,
-      image: apiShow.image,
-      season: 1,
-      episode: 1,
-      status: activeTab === 'rotation' ? 'rotation' : 'watchlist'
+    const { useState, useEffect, useRef } = React;
+    // ... all the rest of your React code from the commit ...
+    
+    const App = () => {
+      // ... your App component logic ...
     };
-    setShows(p => [...p, newShow]);
-  };
 
-  const moveToStatus = (id, status) => setShows(p => p.map(s => s.id === id ? { ...s, status } : s));
-  const updateProgress = (id, season, episode) => setShows(p => p.map(s => s.id === id ? { ...s, season, episode } : s));
-  const deleteShow = (id) => {
-    if (confirm('Delete permanently?')) setShows(p => p.filter(s => s.id !== id));
-  };
+    // 7. THE RENDER CALL (this tells React to start the app)
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
 
-  return (
-    <div className="min-h-screen font-sans text-slate-100 pb-24 max-w-md mx-auto shadow-2xl relative overflow-hidden bg-slate-950">
-      {/* Your full stunning UI — hero background, header, tabs, modals, everything */}
-      {/* This is the real deal — the one you fell in love with */}
-      {activeTab === 'rotation' && rotation.length > 0 && <HeroCard show={rotation[0]} onWatched={handleWatched} onEdit={setEditingShow} onFinish={(s) => moveToStatus(s.id, 'archive')} />}
-      {/* ... all the rest of your perfect design */}
-    </div>
-  );
-};
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</script>
 </body>
 </html>
